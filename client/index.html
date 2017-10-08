@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Upload Picture</title>
+    <style media="screen">
+      body {
+        display: flex;
+        min-height: 100vh;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      #uploader {
+        -webkit-appereance: none;
+        appereance: none;
+        width: 50%;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+
+    <img id="image_preview" src="#" alt="uploaded image" /><br><br>
+    <progress value="0" max="100" id="uploader">0%</progress>
+    <input id="house_id" type="text" name="" value="" placeholder="id rumah">
+
+    <input type="file" name="" id="fileButton">
+    <div id="words">
+
+    </div>
+    <div id="words_array">
+
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.4.0/firebase.js"></script>
+    <script>
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyCcfYVFV31_UnKJfBL24uawHGKz_Z26sFE",
+        authDomain: "awesome-presentation.firebaseapp.com",
+        databaseURL: "https://awesome-presentation.firebaseio.com",
+        projectId: "awesome-presentation",
+        storageBucket: "awesome-presentation.appspot.com",
+        messagingSenderId: "1021392727967"
+      };
+      firebase.initializeApp(config);
+
+      var uploader = document.getElementById('uploader')
+      var fileButton = document.getElementById('fileButton')
+
+      fileButton.addEventListener('click', function(e) {
+        var file = e.target.files[0]
+      })
+
+      fileButton.addEventListener('change', function(e) {
+        var file = e.target.files[0]
+
+        // upload(file)
+
+        var storageRef = firebase.storage().ref(`ocr/${file.name}`)
+        var uploadFile = storageRef.put(file)
+
+        uploadFile.on('state_changed',
+
+          function progress(snapshot) {
+            var percentage = (snapshot.bytesTransferred/snapshot.totalBytes) * 100
+            uploader.value = percentage
+          },
+          function error(err) {
+            console.log(err)
+          },
+          function complete () {
+            storageRef.getDownloadURL()
+            .then(url => {
+              axios.post(`http://localhost:3000/api/images/ocr`, {
+                url: url
+              })
+              .then(({data}) => {
+                console.log(data)
+                $("#words").empty()
+                $("#words_array").empty()
+                $( "#words" ).append( `<p>${data.join(' ')}</p>` );
+                $( "#words_array" ).append( `<p>${data}</p>` );
+              })
+              .catch(err => {
+                console.log(err)
+              })
+            })
+            .catch(err => {
+              console.log(err)
+            })
+          }
+        )
+      })
+    </script>
+    <script type="text/javascript">
+    function readURL(input) {
+
+      if (input.files && input.files[0]) {
+          var reader = new FileReader();
+
+          reader.onload = function (e) {
+              $('#image_preview').attr('src', e.target.result);
+          }
+
+          reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    $("#fileButton").change(function(){
+      readURL(this);
+    });
+
+    function upload(file) {
+
+      var fileObject  = {
+         'lastModified'     : file.lastModified,
+         'lastModifiedDate' : file.lastModifiedDate,
+         'name'             : file.name,
+         'size'             : file.size,
+         'type'             : file.type
+      };
+
+      debugger
+      axios.post(`http://localhost:3000/api/images/upload`, {
+        file: JSON.stringify(fileObject)
+      })
+      .then(({data}) => {
+        console.log(data)
+      })
+      .catch(err => {
+        console.log(err)
+      })
+    }
+    </script>
+  </body>
+</html>
