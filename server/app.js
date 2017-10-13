@@ -50,6 +50,7 @@ app.use(function(err, req, res, next) {
   });
 });
 
+let db_mongodb_deploy = `mongodb://fajarkarim:QvYVoASycYyDwFAp@cluster0-shard-00-00-soyt6.mongodb.net:27017,cluster0-shard-00-01-soyt6.mongodb.net:27017,cluster0-shard-00-02-soyt6.mongodb.net:27017/qlue_metering?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin`
 let db_url_dev = `mongodb://localhost:27017/ocr_sample`
 
 mongoose.connect(db_url_dev, err => {
