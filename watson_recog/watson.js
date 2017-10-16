@@ -6,6 +6,7 @@ var arg = process.argv.slice(2)
 var option = arg[0]
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 var api_key = require('./watson-config/watson_api')
+var init_training_id = `metering_1684455494`
 
 switch (option) {
   case 'crop':
@@ -13,12 +14,12 @@ switch (option) {
     crop(cropImage)
     break
   case 'status':
-    var training_id = arg[1] || `metering_93837125`
+    var training_id = arg[1] || init_training_id
     checkTrainingStatus(training_id)
     break;
   case 'recog':
     var uncroppedImage = arg[1] || '1_strict.jpg'
-    var training_id = arg[2] || `metering_93837125`
+    var training_id = arg[2] || init_training_id
     async function recog (uncroppedImage, training_id) {
       await crop(uncroppedImage)
       let digits = ['digit_1.jpg', 'digit_2.jpg', 'digit_3.jpg' ,'digit_4.jpg', 'digit_5.jpg', 'digit_6.jpg']
@@ -63,6 +64,7 @@ async function crop (uncropped_image) {
 }
 
 function recogImage(image_file, training_id) {
+  console.log(training_id)
   var visual_recognition = new VisualRecognitionV3({
     api_key: api_key,
     version_date: VisualRecognitionV3.VERSION_DATE_2016_05_20
@@ -79,6 +81,7 @@ function recogImage(image_file, training_id) {
         reject(err)
       }
       else {
+        console.log(res)
         let classes = res.images[0].classifiers[0].classes
         let maxAccuration = Math.max(...Array.from(classes, c => c.score))
         console.log('fetching to api.... recognizing.....')
