@@ -1,9 +1,12 @@
 var express = require('express');
+var multer  = require('multer')
+var upload = multer({ dest: 'uploads/' })
 var router = express.Router();
 
 var firebase = require('../configs/firebase_config.js')
 var vision = require('../coba_ocr_gcp.js')
 var House = require('../models/house')
+var watson = require('../helpers/watson')
 
 router.post('/ocr', function(req, res, next) {
   vision.detectText(req.body.url, function(err, text, apiResponse) {
@@ -42,6 +45,12 @@ router.post('/upload', function(req, res) {
         console.log(err)
       })
     })
+  })
+
+  router.post('/upload_crop_watson', upload.single('image'), async (req, res) => {
+    let image_file_path = req.file.path
+    let result = await watson.watsonRecog(image_file_path)
+    res.send(result)
   })
 
 
