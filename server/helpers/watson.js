@@ -1,5 +1,7 @@
 
 var fs = require('fs')
+var axios = require('axios')
+var request = require('request')
 
 var VisualRecognitionV3 = require('watson-developer-cloud/visual-recognition/v3');
 var watsonConfig = require('../configs/watson_config')
@@ -73,6 +75,41 @@ function recogImage(image_file, training_id) {
   })
 }
 
+function recogWithFlask(image_file_path) {
+  console.log(`----------- image with flask`)
+  console.log(image_file_path)
+  let recog_api_uri = `http://localhost:5000/recog_digits`
+  let body_parameters = {
+    file_path: image_file_path
+  }
+  return new Promise((resolve, reject) => {
+    request.post({
+        url:recog_api_uri, form: body_parameters
+    }, function(err,httpResponse,body) {
+      err ? reject(err) : resolve(body)
+     })
+  })
+}
+
+async function recogAllWithFlask(uncropped_image) {
+  await crop(uncropped_image)
+  let digits = ['/home/karim/qlue/ocr-metering/server/digit_1.jpg', '/home/karim/qlue/ocr-metering/server/digit_2.jpg', '/home/karim/qlue/ocr-metering/server/digit_3.jpg' ,'/home/karim/qlue/ocr-metering/server/digit_4.jpg', '/home/karim/qlue/ocr-metering/server/digit_5.jpg', '/home/karim/qlue/ocr-metering/server/digit_6.jpg']
+  let result = []
+  let accurationSum = 0
+  let textResult = []
+
+  for (let i = 0; i < digits.length; i++) {
+    let digit = digits[i]
+    let digitResult = await recogWithFlask(digit)
+    textResult.push(digitResult)
+  }
+  // let digitResult = await recogWithFlask(digits[0])
+
+  console.log(textResult)
+
+  return textResult
+}
+
 function checkTrainingStatus () {
   var checkTrainUri = `${watsonConfig.uri}${watsonConfig.training_id}?api_key=${watsonConfig.api_key}&version=2016-05-20`
   axios.get(checkTrainUri)
@@ -84,7 +121,12 @@ function checkTrainingStatus () {
 
 module.exports = {
   watsonRecog: async function (image) {
-    var recogData = recogAllDigits(image, watsonConfig.training_id)
+    let recogData = recogAllDigits(image, watsonConfig.training_id)
+    return recogData
+  },
+  flaskRecog: async function(image) {
+    let recogData = await recogAllWithFlask(image)
+    console.log(recogData)
     return recogData
   }
 }

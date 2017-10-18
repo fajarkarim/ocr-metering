@@ -53,5 +53,11 @@ router.post('/upload', function(req, res) {
     res.send(result)
   })
 
+  router.post('/upload_crop_flask', upload.single('image'), async (req, res) => {
+    let image_file_path = req.file.path
+    let result = await watson.flaskRecog(image_file_path)
+    res.send(result)
+  })
+
 
 module.exports = router;
