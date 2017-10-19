@@ -76,8 +76,7 @@ function recogImage(image_file, training_id) {
 }
 
 function recogWithFlask(image_file_path) {
-  console.log(`----------- image with flask`)
-  console.log(image_file_path)
+
   let recog_api_uri = `http://localhost:5000/recog_digits`
   let body_parameters = {
     file_path: image_file_path
@@ -93,21 +92,23 @@ function recogWithFlask(image_file_path) {
 
 async function recogAllWithFlask(uncropped_image) {
   await crop(uncropped_image)
-  let digits = ['/home/karim/qlue/ocr-metering/server/digit_1.jpg', '/home/karim/qlue/ocr-metering/server/digit_2.jpg', '/home/karim/qlue/ocr-metering/server/digit_3.jpg' ,'/home/karim/qlue/ocr-metering/server/digit_4.jpg', '/home/karim/qlue/ocr-metering/server/digit_5.jpg', '/home/karim/qlue/ocr-metering/server/digit_6.jpg']
-  let result = []
+  let digits = ['/home/karim/qlue/ocr-metering/server/digit_1.jpg', '/home/karim/qlue/ocr-metering/server/digit_2.jpg', '/home/karim/qlue/ocr-metering/server/digit_3.jpg' ,'/home/karim/qlue/ocr-metering/server/digit_4.jpg', '/home/karim/qlue/ocr-metering/server/digit_5.jpg', '/home/karim/qlue/ocr-metering/server/digit_6.jpg']  
   let accurationSum = 0
   let textResult = []
+  let result = {}
 
   for (let i = 0; i < digits.length; i++) {
     let digit = digits[i]
     let digitResult = await recogWithFlask(digit)
-    textResult.push(digitResult)
+    let jsonDigitResult = JSON.parse(digitResult)
+    accurationSum += jsonDigitResult.accuration
+    textResult.push(jsonDigitResult.text)
   }
-  // let digitResult = await recogWithFlask(digits[0])
+  let avgAccuration = accurationSum / digits.length
+  result.text = textResult.join('')
+  result.accuration = avgAccuration
 
-  console.log(textResult)
-
-  return textResult
+  return result
 }
 
 function checkTrainingStatus () {
